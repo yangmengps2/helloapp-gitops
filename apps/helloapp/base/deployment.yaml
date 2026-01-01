@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloapp
+  labels:
+    app: helloapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: helloapp
+  template:
+    metadata:
+      labels:
+        app: helloapp
+    spec:
+      containers:
+        - name: helloapp
+          image: 939503809934.dkr.ecr.ap-southeast-2.amazonaws.com/helloapp:sha-a57ecb9
+          ports:
+            - containerPort: 5000
+          imagePullPolicy: IfNotPresent

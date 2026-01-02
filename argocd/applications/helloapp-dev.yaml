@@ -9,7 +9,7 @@ metadata:
       helloapp=939503809934.dkr.ecr.ap-southeast-2.amazonaws.com/helloapp
 
     # 2) 更新策略：取最新 tag（对 sha-xxx 很适合）
-    argocd-image-updater.argoproj.io/helloapp.update-strategy: latest
+    argocd-image-updater.argoproj.io/helloapp.update-strategy: newest-build
 
     # 3) 只允许 sha-xxxx 这种 tag，避免抓到别的 tag
     argocd-image-updater.argoproj.io/helloapp.allow-tags: regexp:^sha-[0-9a-f]{7,40}$

@@ -5,7 +5,5 @@ resources:
   - ../../base
 images:
   - name: 939503809934.dkr.ecr.ap-southeast-2.amazonaws.com/helloapp
-    newTag: sha-f9f243a
+    newTag: sha-40b62f8
     newName: 939503809934.dkr.ecr.ap-southeast-2.amazonaws.com/helloapp
-
-    

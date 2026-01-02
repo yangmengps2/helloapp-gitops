@@ -4,12 +4,21 @@ metadata:
   name: helloapp-dev
   namespace: argocd
   annotations:
-    argocd-image-updater.argoproj.io/image-list: helloapp=939503809934.dkr.ecr.ap-southeast-2.amazonaws.com/helloapp
+    # 1) 目标镜像（给它起个别名 helloapp）
+    argocd-image-updater.argoproj.io/image-list: |
+      helloapp=939503809934.dkr.ecr.ap-southeast-2.amazonaws.com/helloapp
+
+    # 2) 更新策略：取最新 tag（对 sha-xxx 很适合）
     argocd-image-updater.argoproj.io/helloapp.update-strategy: latest
-    argocd-image-updater.argoproj.io/helloapp.allow-tags: regexp:^sha-[0-9a-f]{7}$
-    argocd-image-updater.argoproj.io/write-back-method: git
-    argocd-image-updater.argoproj.io/write-back-target: kustomization
-    argocd-image-updater.argoproj.io/git-branch: main
+
+    # 3) 只允许 sha-xxxx 这种 tag，避免抓到别的 tag
+    argocd-image-updater.argoproj.io/helloapp.allow-tags: regexp:^sha-[0-9a-f]{7,40}$
+
+    # 4) 写回到 dev 分支：从 main 分出来写 dev（符合 PR flow）
+    argocd-image-updater.argoproj.io/git-branch: main:dev
+
+    # 5) 写回方式：用一个 K8s secret 里的 git 写权限（下一步会建）
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/helloapp-gitops-write-creds
 spec:
   project: default
   source:

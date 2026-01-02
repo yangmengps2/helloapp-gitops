@@ -17,33 +17,37 @@ jobs:
   create_pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (for metadata)
+      - name: Checkout (optional)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Create or update PR (dev -> main)
-        id: cpr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
-          branch: dev
-          # 关键：不要创建新分支（我们就是用 dev 作为 head）
-          # 这个 action 默认会创建/推一个临时分支；这里用 branch=dev + base=main
-          # 并配合 title/body 即可复用同一个 PR
-          title: "chore(image): update helloapp image tag"
-          body: |
-            Automated PR opened by GitHub Actions.
+      - name: Create PR if missing (dev -> main)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_BRANCH: main
+          HEAD_BRANCH: dev
+        run: |
+          set -euo pipefail
 
-            - Source: `dev`
-            - Target: `main`
-            - Trigger: push to `dev` (e.g., Argo CD Image Updater)
+          echo "Checking for existing open PR from ${HEAD_BRANCH} to ${BASE_BRANCH}..."
+          existing_url="$(gh pr list \
+            --state open \
+            --base "${BASE_BRANCH}" \
+            --head "${HEAD_BRANCH}" \
+            --json url \
+            --jq '.[0].url' || true)"
 
-          labels: |
-            automation
-            image-updater
+          if [ -n "${existing_url}" ]; then
+            echo "PR already exists: ${existing_url}"
+            exit 0
+          fi
 
-      - name: Output PR URL
-        if: steps.cpr.outputs.pull-request-url != ''
-        run: echo "PR: ${{ steps.cpr.outputs.pull-request-url }}"
+          echo "No existing PR found. Creating one..."
+          gh pr create \
+            --base "${BASE_BRANCH}" \
+            --head "${HEAD_BRANCH}" \
+            --title "chore(image): update helloapp image tag" \
+            --body "Automated PR opened by GitHub Actions after a push to \`${HEAD_BRANCH}\` (e.g., Argo CD Image Updater)."
+
+          echo "PR created successfully."

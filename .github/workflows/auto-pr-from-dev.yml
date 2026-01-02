@@ -1,0 +1,49 @@
+name: Auto PR from dev to main
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: auto-pr-dev-to-main
+  cancel-in-progress: true
+
+jobs:
+  create_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for metadata)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create or update PR (dev -> main)
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: dev
+          # 关键：不要创建新分支（我们就是用 dev 作为 head）
+          # 这个 action 默认会创建/推一个临时分支；这里用 branch=dev + base=main
+          # 并配合 title/body 即可复用同一个 PR
+          title: "chore(image): update helloapp image tag"
+          body: |
+            Automated PR opened by GitHub Actions.
+
+            - Source: `dev`
+            - Target: `main`
+            - Trigger: push to `dev` (e.g., Argo CD Image Updater)
+
+          labels: |
+            automation
+            image-updater
+
+      - name: Output PR URL
+        if: steps.cpr.outputs.pull-request-url != ''
+        run: echo "PR: ${{ steps.cpr.outputs.pull-request-url }}"
